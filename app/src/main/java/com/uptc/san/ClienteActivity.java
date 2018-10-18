@@ -2,19 +2,34 @@ package com.uptc.san;
 
 import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.uptc.san.entidades.Empleados;
+import com.uptc.san.entidades.Trabajos;
 import com.uptc.san.utilidades.Constantes;
 
+import java.util.ArrayList;
 
+
+/**
+ * Clase que permite Registrar a un empleado
+ */
 public class ClienteActivity extends AppCompatActivity {
 
-    public EditText campoId, campoNombre, campoApellidos, campoTelefono, campoSalario;
+    public EditText campoId, campoNombre, campoApellidos, campoTelefono;
+    public Spinner campoCargo;
+    ArrayList<String> listaTrabajos;
+    ArrayList<Trabajos> trabajosLista;
+    ConexionSQLiteHelper conn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,41 +40,92 @@ public class ClienteActivity extends AppCompatActivity {
         campoNombre = (EditText)findViewById(R.id.campoNombre);
         campoApellidos = (EditText)findViewById(R.id.campoApellidos);
         campoTelefono = (EditText)findViewById(R.id.campoTelefono);
-        campoSalario = (EditText)findViewById(R.id.campoSalario);
+        campoCargo = (Spinner)findViewById(R.id.campoCargo);
+
+        //Se llena la lista de trabajos en el spinner
+        consultarTrabajos();
+        ArrayAdapter<CharSequence> adaptador = new ArrayAdapter(this, android.R.layout.simple_spinner_item, listaTrabajos);
+        campoCargo.setAdapter(adaptador );
     }
 
+    /**
+     * Método que permite realizar la consulta de los trabajos ingresados, obtenerlos y add a la lista
+     */
+    public void consultarTrabajos(){
+        SQLiteDatabase db = conn.getWritableDatabase();
+        Trabajos trabajos = null;
+        trabajosLista = new ArrayList<>();
+
+        Cursor cursor = db.rawQuery("SELECT * FROM "+Constantes.TABLA_TRABAJOS, null);
+
+        while(cursor.moveToNext()){
+
+            trabajos = new Trabajos();
+            trabajos.setIdTrabajo(cursor.getInt(0));
+            trabajos.setNombreTrabajo(cursor.getString(1));
+            trabajos.setSalario(cursor.getDouble(2));
+            trabajosLista.add(trabajos);
+        }
+        obtenerLista();
+    }
+
+    /**
+     * Método que add el valor "Seleccione" al inicio de la lista de trabajos
+     */
+    public void obtenerLista(){
+        listaTrabajos = new ArrayList<>();
+        listaTrabajos.add("Seleccione");
+        for (int i = 0; i < trabajosLista.size(); i++){
+            listaTrabajos.add(trabajosLista.get(i).getNombreTrabajo());
+        }
+    }
+
+
+    /**
+     * Metodo que crea un empleado
+     * @param view
+     */
     public void crear(View view) {
         registrarEmpleados();
     }
 
-
+    /**
+     * Metodo que inserta un empleado en la base de datos
+     */
     private void registrarEmpleados(){
         ConexionSQLiteHelper conn = new ConexionSQLiteHelper(this,"db_empleados",null,1);
-        SQLiteDatabase db= conn.getWritableDatabase();
+        SQLiteDatabase db = conn.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(Constantes.CAMPO_IDENTIFICACION,campoId.getText().toString());
+        values.put(Constantes.CAMPO_IDENTIFICACION, campoId.getText().toString());
         values.put(Constantes.CAMPO_NOMBRES, campoNombre.getText().toString());
         values.put(Constantes.CAMPO_APELLIDOS, campoApellidos.getText().toString());
         values.put(Constantes.CAMPO_NUMERO_TELEFONO, campoTelefono.getText().toString());
 
-        //long id = consulta: select id from trabajo where nombre = "escogido"
-        //falta id cargo
-        //values.put(Constantes.CAMPO_ID, id.toString());
+        //Se obtiene el valor seleccionado por el spinner
+        String cargo = campoCargo.getSelectedItem().toString();
+        //Se realiza la consulta para obtener el id del trabajo
+        Cursor cursor = db.rawQuery(Constantes.GET_ID_TRABAJO_BY_NOMBRE + cargo, null);
+            int idCargo = cursor.getInt(0);
+
+        values.put(Constantes.CAMPO_TRABAJO_ID, idCargo);
 
         //Constantes.CAMPO_IDENTIFICACION = nombre del campo a devolver
-        db.insert(Constantes.TABLA_EMPLEADOS,Constantes.CAMPO_IDENTIFICACION,values);
+        db.insert(Constantes.TABLA_EMPLEADOS,Constantes.CAMPO_IDENTIFICACION, values);
 
-        Toast.makeText(getApplicationContext(),"Creado satisfactoriamente",Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(),"Creado satisfactoriamente", Toast.LENGTH_SHORT).show();
         //limpiar campos despues de creado el empleado
         campoNombre.setText("");
         campoApellidos.setText("");
         campoId.setText("");
         campoTelefono.setText("");
-        campoSalario.setText("");
-
+        campoCargo.setSelection(0);
         db.close();
     }
 
+    /**
+     *Método que redirige a consultar un empleado
+     * @param view
+     */
     public void consultar(View view){
         Intent pantallaConsultar = new Intent(ClienteActivity.this, consultar.class);
         startActivity(pantallaConsultar);

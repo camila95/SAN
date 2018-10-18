@@ -5,12 +5,14 @@ public class Empleados {
     private String nombres;
     private String apellidos;
     private String numeroTelefono;
+    private Integer idTrabajo;
 
-    public Empleados(Integer identificacion, String nombres, String apellidos, String numeroTelefono) {
+    public Empleados(Integer identificacion, String nombres, String apellidos, String numeroTelefono, Integer idTrabajo) {
         this.identificacion = identificacion;
         this.nombres = nombres;
         this.apellidos = apellidos;
         this.numeroTelefono = numeroTelefono;
+        this.idTrabajo = idTrabajo;
     }
 
     public Empleados() {
@@ -46,5 +48,13 @@ public class Empleados {
 
     public void setNumeroTelefono(String numeroTelefono) {
         this.numeroTelefono = numeroTelefono;
+    }
+
+    public Integer getIdTrabajo() {
+        return idTrabajo;
+    }
+
+    public void setIdTrabajo(Integer idTrabajo) {
+        this.idTrabajo = idTrabajo;
     }
 }
