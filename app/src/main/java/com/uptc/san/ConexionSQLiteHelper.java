@@ -21,7 +21,13 @@ public class ConexionSQLiteHelper extends SQLiteOpenHelper {
 
      @Override
     public void onCreate(SQLiteDatabase db) {
+    db.execSQL(Constantes.CREAR_TABLA_TRABAJOS);
     db.execSQL(Constantes.CREAR_TABLA_EMPLEADOS);
+    db.execSQL(Constantes.INSERT_1);
+    db.execSQL(Constantes.INSERT_2);
+    db.execSQL(Constantes.INSERT_3);
+    db.execSQL(Constantes.INSERT_4);
+    db.execSQL(Constantes.INSERT_5);
     }
 
     /**
@@ -32,7 +38,8 @@ public class ConexionSQLiteHelper extends SQLiteOpenHelper {
      */
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS EMPLEADOS");
+        db.execSQL("DROP TABLE IF EXISTS "+Constantes.CREAR_TABLA_EMPLEADOS);
+        db.execSQL("DROP TABLE IF EXISTS "+Constantes.CREAR_TABLA_TRABAJOS);
         onCreate(db);
 
     }

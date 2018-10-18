@@ -52,6 +52,7 @@ public class ClienteActivity extends AppCompatActivity {
      * Método que permite realizar la consulta de los trabajos ingresados, obtenerlos y add a la lista
      */
     public void consultarTrabajos(){
+        ConexionSQLiteHelper conn = new ConexionSQLiteHelper(this,"db_empleados",null,1);
         SQLiteDatabase db = conn.getWritableDatabase();
         Trabajos trabajos = null;
         trabajosLista = new ArrayList<>();

@@ -17,13 +17,7 @@ public class MainActivity extends AppCompatActivity {
 
         //Se crea la base de datos
         ConexionSQLiteHelper conn= new ConexionSQLiteHelper(this,"bd_empleados",null,1);
-        //Se ingresan los datos de trabajos en la db creada
-        SQLiteDatabase db = conn.getWritableDatabase();
-        db.execSQL(Constantes.INSERT_1);
-        db.execSQL(Constantes.INSERT_2);
-        db.execSQL(Constantes.INSERT_3);
-        db.execSQL(Constantes.INSERT_4);
-        db.execSQL(Constantes.INSERT_5);
+       
     }
 
     /**
