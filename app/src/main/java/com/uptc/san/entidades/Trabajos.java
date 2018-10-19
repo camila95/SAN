@@ -4,9 +4,9 @@ public class Trabajos {
 
     private Integer idTrabajo;
     private String nombreTrabajo;
-    private Double salario;
+    private Integer salario;
 
-    public Trabajos(Integer idTrabajo, String nombreTrabajo, Double salario) {
+    public Trabajos(Integer idTrabajo, String nombreTrabajo, Integer salario) {
         this.idTrabajo = idTrabajo;
         this.nombreTrabajo = nombreTrabajo;
         this.salario = salario;
@@ -31,11 +31,11 @@ public class Trabajos {
         this.nombreTrabajo = nombreTrabajo;
     }
 
-    public Double getSalario() {
+    public Integer getSalario() {
         return salario;
     }
 
-    public void setSalario(Double salario) {
+    public void setSalario(Integer salario) {
         this.salario = salario;
     }
 }

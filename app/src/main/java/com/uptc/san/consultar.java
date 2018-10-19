@@ -1,6 +1,7 @@
 package com.uptc.san;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
@@ -52,11 +53,11 @@ public class consultar extends AppCompatActivity {
         ArrayAdapter<CharSequence> adaptadorTrabajo = new ArrayAdapter(this, android.R.layout.simple_spinner_item, listaTrabajos);
         cargo.setAdapter(adaptadorTrabajo);
 
-
         //Se add al spinner los datos de los empleados, para mostrarlos en lista
         consultarListaPersonas();
+
         ArrayAdapter<CharSequence> adaptador = new ArrayAdapter(this, android.R.layout.simple_spinner_item, listaEmpleados);
-        comboEmpleados.setAdapter(adaptador );
+        comboEmpleados.setAdapter(adaptador);
 
         //Se muestran los datos del empleados, segun la consulta a realizarse
         comboEmpleados.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -70,10 +71,17 @@ public class consultar extends AppCompatActivity {
 
                     String idCargoSeleccionado = empleadosLista.get(position-1).getIdTrabajo().toString();
 
+                    //Se obtienen los valores (Cargo y Salario) a mostrarse en la pantalla
                     SQLiteDatabase db = conn.getWritableDatabase();
-                    Cursor cursor = db.rawQuery(Constantes.GET_DATOS_TRABAJO_BY_ID + idCargoSeleccionado, null);
-                    String nombreTrabajo = cursor.getString(0);
-                    Double salarioTrabajo = cursor.getDouble(1);
+                    Cursor cursor = db.rawQuery(Constantes.GET_DATOS_TRABAJO_BY_ID, new String[] {idCargoSeleccionado});
+
+                    String nombreTrabajo="";
+                    Integer salarioTrabajo = 0;
+                    while (cursor.moveToNext()) {
+                        nombreTrabajo = (cursor.getString(0));
+                        salarioTrabajo = (cursor.getInt(1));
+                    }
+                    cursor.close();
 
                     //Se llama al metodo que obtiene la posicion en la lista del nombre del trabajo
                     int posicion = getPositionListaCargo(nombreTrabajo);
@@ -81,13 +89,7 @@ public class consultar extends AppCompatActivity {
                     salario.setText(salarioTrabajo.toString());
 
                 }else{
-                    identificacion.setText("");
-                    nombres.setText("");
-                    apellidos.setText("");
-                    telefono.setText("");
-                    cargo.setSelection(0);
-                    salario.setText("");
-                    Toast.makeText(getApplicationContext(),"Seleccione un empleado", Toast.LENGTH_LONG).show();
+                    limpiarCampos();
                 }
             }
 
@@ -99,6 +101,18 @@ public class consultar extends AppCompatActivity {
     }
 
     /**
+     * Método que limpia campos
+     */
+    public void limpiarCampos(){
+        identificacion.setText("");
+        nombres.setText("");
+        apellidos.setText("");
+        telefono.setText("");
+        cargo.setSelection(0);
+        salario.setText("");
+    }
+
+    /**
      * Método que consulta todos los empleados creados, para mostrarlos en el spinner
      */
     public void consultarListaPersonas(){
@@ -106,20 +120,17 @@ public class consultar extends AppCompatActivity {
         Empleados empleados = null;
         empleadosLista = new ArrayList<>();
 
-        Cursor cursor = db.rawQuery("SELECT * FROM "+Constantes.TABLA_EMPLEADOS, null);
+        Cursor cursor = db.rawQuery(Constantes.GET_ALL_EMPLEADOS, null);
 
         while(cursor.moveToNext()){
-
             empleados = new Empleados();
-
             empleados.setIdentificacion(cursor.getInt(0));
             empleados.setNombres(cursor.getString(1));
             empleados.setApellidos(cursor.getString(2));
             empleados.setNumeroTelefono(cursor.getString(3));
-
+            empleados.setIdTrabajo(cursor.getInt(4));
             empleadosLista.add(empleados);
         }
-
         obtenerLista();
     }
 
@@ -129,9 +140,8 @@ public class consultar extends AppCompatActivity {
     public void obtenerLista(){
         listaEmpleados = new ArrayList<>();
         listaEmpleados.add("Seleccione");
-
         for (int i = 0; i < empleadosLista.size(); i++){
-            listaEmpleados.add(empleadosLista.get(i).getIdentificacion() + " " +empleadosLista.get(i).getNombres());
+            listaEmpleados.add(empleadosLista.get(i).getNombres() + " " +empleadosLista.get(i).getApellidos());
         }
     }
 
@@ -150,7 +160,7 @@ public class consultar extends AppCompatActivity {
             trabajos = new Trabajos();
             trabajos.setIdTrabajo(cursor.getInt(0));
             trabajos.setNombreTrabajo(cursor.getString(1));
-            trabajos.setSalario(cursor.getDouble(2));
+            trabajos.setSalario(cursor.getInt(2));
             trabajosLista.add(trabajos);
         }
         obtenerListaTrabajos();
@@ -184,24 +194,96 @@ public class consultar extends AppCompatActivity {
         return result;
     }
 
-
-    //Metodo actualizar Usuario FALTA TERMINAR
-    private void actualizarUsuario(){
-        //Escribir en la db
-        SQLiteDatabase db=conn.getWritableDatabase();
-        String[] parametros = {nombres.getText().toString()};
-        ContentValues values= new ContentValues();
-        values.put(Constantes.CAMPO_IDENTIFICACION,apellidos.getText().toString());
-        values.put(Constantes.CAMPO_NOMBRES,nombres.getText().toString());
-        values.put(Constantes.CAMPO_APELLIDOS,apellidos.getText().toString());
-        values.put(Constantes.CAMPO_TRABAJO_ID,apellidos.getText().toString());
-        values.put(Constantes.CAMPO_NUMERO_TELEFONO,apellidos.getText().toString());
-
-        db.update(Constantes.TABLA_EMPLEADOS,values,Constantes.CAMPO_NOMBRES+"=?",parametros);
-        Toast.makeText(getApplicationContext(),"Actualizado",Toast.LENGTH_LONG).show();
-    }
-
+    /**
+     *
+     * @param view
+     */
     public void Actualizar(View view) {
         actualizarUsuario();
     }
+
+    /**
+     *
+     * @return
+     */
+    public boolean validarDatosActualizar(){
+        if(identificacion.getText().equals("") && identificacion.getText() == null){
+            return false;
+        }
+        if(nombres.getText().equals("") && nombres.getText() == null){
+            return false;
+        }
+        if(apellidos.getText().equals("") && apellidos.getText() == null){
+            return false;
+        }
+        if(telefono.getText().equals("") && telefono.getText() == null){
+            return false;
+        }
+        if(salario.getText().equals("") && salario.getText() == null){
+            return false;
+        }
+        if(cargo.getSelectedItem().equals("Seleccione")){
+            return false;
+        }
+        return true;
+    }
+
+
+    /**
+     * Metodo actualizar
+     */
+    private void actualizarUsuario(){
+
+        if(validarDatosActualizar()){
+
+            SQLiteDatabase db = conn.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(Constantes.CAMPO_IDENTIFICACION, identificacion.getText().toString());
+            values.put(Constantes.CAMPO_NOMBRES, nombres.getText().toString());
+            values.put(Constantes.CAMPO_APELLIDOS, apellidos.getText().toString());
+            values.put(Constantes.CAMPO_NUMERO_TELEFONO, telefono.getText().toString());
+
+            //Se obtiene el valor seleccionado por el spinner
+            String cargoActualizado = cargo.getSelectedItem().toString();
+            //Se realiza la consulta para obtener el id del trabajo
+            Cursor cursor = db.rawQuery(Constantes.GET_ID_TRABAJO_BY_NOMBRE, new String[] {cargoActualizado});
+            String idCargo = "";
+            while (cursor.moveToNext()) {
+                idCargo = (cursor.getString(0));
+            }
+            values.put(Constantes.CAMPO_TRABAJO_ID, idCargo);
+            String[] parametros = {identificacion.getText().toString()};
+            db.update(Constantes.TABLA_EMPLEADOS, values, Constantes.CAMPO_IDENTIFICACION + " =? " , parametros);
+            db.close();
+            Toast.makeText(getApplicationContext(), "Actualizado", Toast.LENGTH_SHORT).show();
+            limpiarCampos();
+            redireccionar();
+
+        }else{
+            Toast.makeText(getApplicationContext(), "Faltan campos", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Redirecciona al ingresar empleados
+     */
+    public void redireccionar(){
+        Intent pantallaRegistrarEmpleados = new Intent(consultar.this, ClienteActivity.class);
+        startActivity(pantallaRegistrarEmpleados);
+    }
+
+    /**
+     *
+     * @param view
+     */
+    public void eliminar(View view){
+        SQLiteDatabase db = conn.getWritableDatabase();
+        String[] parametros = {identificacion.getText().toString()};
+        db.delete(Constantes.TABLA_EMPLEADOS, Constantes.CAMPO_IDENTIFICACION + " =? ", parametros);
+        db.close();
+        Toast.makeText(getApplicationContext(),"Eliminado correctamente",Toast.LENGTH_LONG).show();
+        limpiarCampos();
+        redireccionar();
+    }
+
 }

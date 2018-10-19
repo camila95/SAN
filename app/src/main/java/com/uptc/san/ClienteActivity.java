@@ -45,7 +45,7 @@ public class ClienteActivity extends AppCompatActivity {
         //Se llena la lista de trabajos en el spinner
         consultarTrabajos();
         ArrayAdapter<CharSequence> adaptador = new ArrayAdapter(this, android.R.layout.simple_spinner_item, listaTrabajos);
-        campoCargo.setAdapter(adaptador );
+        campoCargo.setAdapter(adaptador);
     }
 
     /**
@@ -64,7 +64,7 @@ public class ClienteActivity extends AppCompatActivity {
             trabajos = new Trabajos();
             trabajos.setIdTrabajo(cursor.getInt(0));
             trabajos.setNombreTrabajo(cursor.getString(1));
-            trabajos.setSalario(cursor.getDouble(2));
+            trabajos.setSalario(cursor.getInt(2));
             trabajosLista.add(trabajos);
         }
         obtenerLista();
@@ -94,33 +94,69 @@ public class ClienteActivity extends AppCompatActivity {
      * Metodo que inserta un empleado en la base de datos
      */
     private void registrarEmpleados(){
-        ConexionSQLiteHelper conn = new ConexionSQLiteHelper(this,"db_empleados",null,1);
-        SQLiteDatabase db = conn.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(Constantes.CAMPO_IDENTIFICACION, campoId.getText().toString());
-        values.put(Constantes.CAMPO_NOMBRES, campoNombre.getText().toString());
-        values.put(Constantes.CAMPO_APELLIDOS, campoApellidos.getText().toString());
-        values.put(Constantes.CAMPO_NUMERO_TELEFONO, campoTelefono.getText().toString());
+        if(validarDatosConsultar()) {
+            ConexionSQLiteHelper conn = new ConexionSQLiteHelper(this, "db_empleados", null, 1);
+            SQLiteDatabase db = conn.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(Constantes.CAMPO_IDENTIFICACION, campoId.getText().toString());
+            values.put(Constantes.CAMPO_NOMBRES, campoNombre.getText().toString());
+            values.put(Constantes.CAMPO_APELLIDOS, campoApellidos.getText().toString());
+            values.put(Constantes.CAMPO_NUMERO_TELEFONO, campoTelefono.getText().toString());
 
-        //Se obtiene el valor seleccionado por el spinner
-        String cargo = campoCargo.getSelectedItem().toString();
-        //Se realiza la consulta para obtener el id del trabajo
-        Cursor cursor = db.rawQuery(Constantes.GET_ID_TRABAJO_BY_NOMBRE + cargo, null);
-            int idCargo = cursor.getInt(0);
+            //Se obtiene el valor seleccionado por el spinner
+            String cargo = campoCargo.getSelectedItem().toString();
+            //Se realiza la consulta para obtener el id del trabajo
+            Cursor cursor = db.rawQuery(Constantes.GET_ID_TRABAJO_BY_NOMBRE, new String[] {cargo});
+            String idCargo = "";
+            while (cursor.moveToNext()) {
+                idCargo = (cursor.getString(0));
+            }
 
-        values.put(Constantes.CAMPO_TRABAJO_ID, idCargo);
+            values.put(Constantes.CAMPO_TRABAJO_ID, idCargo);
 
-        //Constantes.CAMPO_IDENTIFICACION = nombre del campo a devolver
-        db.insert(Constantes.TABLA_EMPLEADOS,Constantes.CAMPO_IDENTIFICACION, values);
+            //Constantes.CAMPO_IDENTIFICACION = nombre del campo a devolver
+            db.insert(Constantes.TABLA_EMPLEADOS, Constantes.CAMPO_IDENTIFICACION, values);
 
-        Toast.makeText(getApplicationContext(),"Creado satisfactoriamente", Toast.LENGTH_SHORT).show();
-        //limpiar campos despues de creado el empleado
+            Toast.makeText(getApplicationContext(), "Creado satisfactoriamente", Toast.LENGTH_SHORT).show();
+            limpiarCampos();
+            db.close();
+        }else{
+            Toast.makeText(getApplicationContext(), "Faltan campos", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Limpiar campos despues de creado el empleado
+     */
+    public void limpiarCampos(){
         campoNombre.setText("");
         campoApellidos.setText("");
         campoId.setText("");
         campoTelefono.setText("");
         campoCargo.setSelection(0);
-        db.close();
+    }
+
+    /**
+     *Método que valida los campos
+     * @return
+     */
+    public boolean validarDatosConsultar(){
+        if(campoId.getText().equals("") && campoId.getText() == null){
+            return false;
+        }
+        if(campoNombre.getText().equals("") && campoNombre.getText() == null){
+            return false;
+        }
+        if(campoApellidos.getText().equals("") && campoApellidos.getText() == null){
+            return false;
+        }
+        if(campoTelefono.getText().equals("") && campoTelefono.getText() == null){
+            return false;
+        }
+        if(campoCargo.getSelectedItem().equals("Seleccione")){
+            return false;
+        }
+        return true;
     }
 
     /**
